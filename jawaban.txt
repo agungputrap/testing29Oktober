@@ -67,6 +67,26 @@ perlu diubah dengan tahapan :
    jika ya maka nilai dari component.file kita ambil dari process.env.[VARIABLE_NAME],
    jika tidak maka ambil value dari componet.file secara eksplisit.
 
+sebelum diedit :
+Object.keys(configComponents).forEach(function (e) {
+            let file = configComponents[e].file;
+            objectRequire[e] = require("./" + path.dirname(file) + "/" + path.basename(file, '.js'));
+            listComponents.push(e);
+        });
+
+setelah diedit untuk membaca environment variable :
+Object.keys(configComponents).forEach(function (e) {
+            let file = configComponents[e].file;
+            let regexEV = "/{\$[\w]}/g";
+            if(regexEV.test(file)) {
+                objectRequire[e] = require("./" + process.env[file].slice(2, -1));
+            }
+            else {
+                objectRequire[e] = require("./" + path.dirname(file) + "/" + path.basename(file, '.js'));
+            }
+            listComponents.push(e);
+        });
+
 
 1. What is the benefit of this change? 
 karena convRepo dan userRepo memiliki method yang sama, kita dapat menggeneralisir
