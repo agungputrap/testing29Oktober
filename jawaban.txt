@@ -1,0 +1,99 @@
+1. What design patterns do you recognize here?
+design pattern yang digunakan dalam soal tersebut adalah
+facade pattern, dimana akses fungsi dengan package / class lain
+ melalui class perantara(API). potongan kode dari soal yang menjadi
+ bukti adalah :
+
+let store = new Memstore();
+let convRepo = new ConversationRepo(store);
+let userRepo = new UserRepo(store);
+let server = new ApiServer(convRepo, userRepo);
+server.start(5000);
+
+1. What is the advantage of having initialization in configuration file?
+jika terdapat perubahan atau penambahan pada components yang akan digunakan
+atau terdapat perubahan pemanggilan main class, tidak perlu mengubah
+kodingan dari scratch, cukup membuat class component dan mengubah file
+configuration.js
+
+2. What is this pattern called? 
+design pattern yang digunakan adalah dependency injection, dimana
+terdapat suatu class (Injector) yang membuat inisialisasi object component
+yang telah didefinisikan pada file configuration.js tanpa harus dideklarasikan
+pada  main class. tipe injector pada implementasi aplikasi ini adalah constructor
+injector karena object yang telah diinisialisasi dilempar ke inisialisasi object class
+lain sebagai param.
+
+3. If you created a DBStore with path components/store/db_store what do you need to do 
+to swap the implementation. 
+ubah/tambah deklarasi store pada configuration.js sebelumnya :
+
+"store": {
+            "file": "components/store/memory_store.js",
+            "dependencies": []
+        },
+
+menjadi :
+
+"DBstore": {
+            "file": "components/store/db_store.js",
+            "dependencies": []
+        },
+
+dan jika ingin menggunakan DBstore maka kita perlu mengubah dependencies setiap
+component yang akan menggunakan DBstore (dependency store -> DBstore), yaitu component : 
+convRepo dan userRepo
+
+4. Define steps to be done if you want to have the configuration file definable in environment variable like this: 
+{
+    "components": {
+        "store": {
+            "file": "{$WAREHOUSE_SERVICE_STORE_COMPONENT}",
+            "dependencies": []
+        },
+        ...
+    }
+}
+
+//bash
+$ export WAREHOUSE_SERVICE_STORE_COMPONENT=components/store/db_store.js
+$ node start.js
+
+setiap export environment dapat diakses dengan menggunakan process.env (https://www.twilio.com/blog/2017/08/working-with-environment-variables-in-node-js.html),
+dengan format pemanggilan process.env.[VARIABLE_NAME].
+supaya injector dapat membaca configuration.json yang menggunakan environtment variable, maka
+perlu diubah dengan tahapan :
+ - ambil value dari nama_component.file, apakah memiliki pola {$VARIABLE_NAME},
+   jika ya maka nilai dari component.file kita ambil dari process.env.[VARIABLE_NAME],
+   jika tidak maka ambil value dari componet.file secara eksplisit.
+
+
+1. What is the benefit of this change? 
+karena convRepo dan userRepo memiliki method yang sama, kita dapat menggeneralisir
+ke sebuah class general(general_repo), untuk membedakan constructornya perlu ditambahkan
+param schema yg membedakan bentuk object conversation dan user. jika terdapat tambahan file repo
+dengan method yg sama, kita bisa menambahkannya lagi tanpa perlu membuat file repo baru, didefinisikan saja
+beserta dengan schemanya di configuration_generic.js
+
+2.What should I change if I want to add new path /tokens with following fields: string token; int expire;
+pertama kita perlu menambahkan commponent baru pada file configuration_generic.js :
+"tokens": {
+            "file": "components/repo/generic_repo.js",
+            "dependencies": ["store"],
+            "options": {
+                "schema": {
+                    "token": "string",
+                    "expire": int
+                }
+            }
+        },
+kedua, kita perlu menambahkan  dependencies dan options.route di server pada file configuration_generic.json:
+"server": {
+            "file": "components/server/api_server_generic.js",
+            "dependencies": ["convRepo",  "userRepo", "tokens"],
+            "options": {
+                "routes": ["/conversations", "/users", "/tokens"]
+            }
+        }
+ketiga, supaya berjalan, kita perlu mengubah constructor ApiServer dengan menambahkan param tokens
+untuk inisialisasi memstore tokens(dan menambahkan kodingan untuk mengecheck path "/tokens")
