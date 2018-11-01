@@ -17,6 +17,16 @@ describe("simple api testing with injector", function () {
         request = chai.request(injector.components[main.component].app);
     });
 
+    describe("load components", function () {
+        it("load components", () => {
+            let listComponent = config.components;
+            for(var component in listComponent) {
+                //list component berhasil dibuat jika tidak kosong
+                assert.isNotNull(injector.components[component]);
+            };
+        });
+    });
+
     describe("/ route", function () {
         it("server is up", (done) => {
             request.get("/")
