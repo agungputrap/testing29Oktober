@@ -27,7 +27,7 @@ module.exports = class ApiServer {
             if(routes[index] == "/conversations") {
                 whatRepo = convRepo;
             }
-            else {
+            else if(routes[index] == "/users"){
                 whatRepo = userRepo;
             }
 

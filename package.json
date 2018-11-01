@@ -4,6 +4,7 @@
   "description": "testing example rest using express.js",
   "main": "index.js",
   "scripts": {
+    "start": "node app.js",
     "test": "mocha test"
   },
   "author": "",
