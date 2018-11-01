@@ -1,4 +1,3 @@
-
 var memstore = require('memstore').Store;
 
 module.exports = class Memstore {

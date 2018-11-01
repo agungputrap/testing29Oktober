@@ -1,11 +1,9 @@
-'use strict';
-
 const path = require('path');
 
 module.exports = class Injector {
     constructor(config) {
         this.config = config;
-        this.module = {};
+        this.objectRequire= {};
         this.components = {};
     }
     resolve(component) {
@@ -18,24 +16,24 @@ module.exports = class Injector {
             }
         }
         if(option) {
-            return Reflect.construct(this.module[component], [option].concat(args));
+            return Reflect.construct(this.objectRequire[component], [option].concat(args));
         }
         else {
-            return Reflect.construct(this.module[component], args);
+            return Reflect.construct(this.objectRequire[component], args);
         }
     }
 
     start() {
         let configComponents = this.config.components;
-        let module = this.module;
+        let objectRequire = this.objectRequire;
         let listComponents = [];
         Object.keys(configComponents).forEach(function (e) {
             let file = configComponents[e].file;
-            module[e] = require("./" + path.dirname(file) + "/" + path.basename(file, '.js'));
+            objectRequire[e] = require("./" + path.dirname(file) + "/" + path.basename(file, '.js'));
             listComponents.push(e);
         });
 
-        this.module = module;
+        this.objectRequire = objectRequire;
         for(let index = 0; index < listComponents.length;index++) {
             if(!this.components[listComponents[index]]) {
                 this.components[listComponents[index]] = this.resolve(listComponents[index]);
